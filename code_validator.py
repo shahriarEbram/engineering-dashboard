@@ -1,3 +1,6 @@
+import re
+import streamlit as st
+
 equipment_name = {
     'D': 'قالب ریخته گری',
     'C': 'قالب ماهیچه',
@@ -189,43 +192,29 @@ map_type = {
     'R': 'تحقیقاتی',
 }
 
-product_counter = {
-
-    '01': 'دست اول',
-    '02': 'دست دوم',
-    '03': 'دست سوم',
-}
 
 
 
+def validate_code(code):
+    if len(code) != 9:
+        return False
 
-# Function to decode the code
-def decode_code(code):
-    equipment_char = code[0]
-    subset_code = code[1:3]
-    product_code = code[3:5]
-    map_source_char = code[5]
-    map_type_char = code[6]
-    product_counter = code[7:9]
+    # Extract components from the code
+    equipment, subset, product, map_src, map_tp, number = code[:1], code[1:3], code[3:5], code[5], code[6], code[7:]
 
-    equipment = equipment_name.get(equipment_char, 'نامشخص')
-    subset = equipment_name_subset.get(equipment_char, {}).get(subset_code, 'نامشخص')
-    product = product_name.get(product_code, 'نامشخص')
-    source = map_source.get(map_source_char, 'نامشخص')
-    type_ = map_type.get(map_type_char, 'نامشخص')
-    counter = f'دست {int(product_counter)}' if product_counter.isdigit() else 'نامشخص'
+    # Check if each component is valid
+    if equipment not in equipment_name:
+        return False
+    if subset not in equipment_name_subset.get(equipment, {}):
+        return False
+    if product not in product_name:
+        return False
+    if map_src not in map_source:
+        return False
+    if map_tp not in map_type:
+        return False
+    if not number.isdigit() or not 1 <= int(number) <= 99:
+        return False
 
-    return {
-        'equipment': equipment,
-        'subset': subset,
-        'product': product,
-        'source': source,
-        'type': type_,
-        'counter': counter
-    }
+    return True
 
-# Example usage
-code = 'C9918NP01'
-decoded = decode_code(code)
-for key, value in decoded.items():
-    print(f'{key}: {value}')
