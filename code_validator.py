@@ -63,7 +63,7 @@ equipment_name_subset = {
         '11': 'منيفولد دود',
         '12': 'منيفولد هوا',
         '13': ' لنگي و سيت و گايد',
-        '14' : 'میز صافی سطح'
+        '14': 'میز صافی سطح'
 
     },
     'M': {
@@ -131,7 +131,8 @@ equipment_name_subset = {
         '39': 'قالب توری کاپی',
         '40': 'مدل سازی 3بعدی',
         '41': 'جرثقیل',
-        '42': 'مدل سازی تفلونی'
+        '42': 'مدل سازی تفلونی',
+        '43': "توری گذار"
     },
     'Q': {
         '10': "اهدا دارو"
@@ -193,12 +194,11 @@ map_type = {
 }
 
 
-
-
 def validate_code(code):
     if len(code) != 9:
         return False
-
+    if code == "000000000":
+        return True
     # Extract components from the code
     equipment, subset, product, map_src, map_tp, number = code[:1], code[1:3], code[3:5], code[5], code[6], code[7:]
 
@@ -217,4 +217,23 @@ def validate_code(code):
         return False
 
     return True
+
+
+def decode_code(code):
+    code = code.upper()
+    if code == "000000000":
+        return "متفرقه"
+    elif code == "111111111":
+        return "پیگیری کارهای جاری"
+    elif code == "":
+        return ""
+    else:
+        equipment, subset, product, map_src, map_tp, number = code[:1], code[1:3], code[3:5], code[5], code[6], code[7:]
+        return (equipment_name.get(equipment) + " " +
+                equipment_name_subset.get(equipment)[subset] + " " +
+                product_name.get(product) + " " +
+                #map_source.get(map_src) + " " +
+                #map_type.get(map_tp) + " " +
+                "دست " + number
+                )
 

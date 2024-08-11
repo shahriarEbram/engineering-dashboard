@@ -1,18 +1,20 @@
+import code_validator
+from generate_keys import staff_names, usernames
+import streamlit_authenticator as stauth
+from code_validator import validate_code, decode_code
+from pathlib import Path
 import streamlit as st
 import pandas as pd
-import cons
 import jdatetime
 import datetime
-from code_validator import validate_code
 import pickle
-from pathlib import Path
-import streamlit_authenticator as stauth
-from generate_keys import staff_names, usernames
+import cons
+import os
 
 st.set_page_config(layout="wide")
 
-# load hashed passwords
-file_path = Path(__file__).parent / "hashed_pw.pkl"
+# Load hashed passwords
+file_path = Path(__file__).parent / "data/hashed_pw.pkl"
 with file_path.open("rb") as file:
     hashed_passwords = pickle.load(file)
 authenticator = stauth.Authenticate(staff_names, usernames, hashed_passwords,
@@ -26,78 +28,76 @@ if authentication_status == False:
 if authentication_status == None:
     st.warning("Please enter your username and password")
 
-col1row_1, col2row_1, col3row_1 = st.columns(3)
 if authentication_status:
+    # Ensure session state reset is done after successful logout
+    if 'username' in st.session_state and st.session_state['username'] != username:
+        st.session_state.clear()
+
+    # Now assign the new username to session state
+    st.session_state['username'] = username
+
+    # Set unique session keys based on username
+    df_key = f"df_{username}"
+    visibility_key = f"visibility_{username}"
+    disabled_key = f"disabled_{username}"
+
+    # Logout button
+    with st.sidebar:
+        st.write(f"Welcome, {username}")
+        authenticator.logout("Logout", "sidebar")
+
+
+
+    # Continue with the rest of your application logic
     staff = cons.engineers_names.get(username)
 
-    with st.sidebar:
-        st.write("welcome", username)
-    authenticator.logout("Logout", "sidebar")
 
+    # st.write(f"Welcome, {username}")
 
     # *** Date Setting *** #
-    # Gregorian To Shamsi
     def miladi_to_shamsi(date):
         return jdatetime.date.fromgregorian(date=date)
 
 
-    # Today date in Shamsi
     today_shamsi = miladi_to_shamsi(jdatetime.datetime.now().togregorian())
-    # *** Date Setting *** #
 
     # *** Dataframe Setting *** #
+    if df_key not in st.session_state:
+        filename = f"data/{username}.csv"
 
-    # Load the dataframe and store it in the session state if not already there
-    if "df" not in st.session_state:
-        df = pd.read_csv("test.csv")
+        if not os.path.exists(filename):
+            df = pd.DataFrame(columns=['person_name', 'task_name',
+                                       'project_code', 'project_name',
+                                       'date', 'duration',
+                                       'project_description'])
+            df.to_csv(filename, index=False)
+        else:
+            df = pd.read_csv(filename)
+
         df['task_name'] = df['task_name'].astype(pd.CategoricalDtype(cons.task_name.values()))
-        st.session_state.df = df
+        st.session_state[df_key] = df
 
-    # Store the initial value of widgets in session state
-    if "visibility" not in st.session_state:
-        st.session_state.visibility = "visible"
-        st.session_state.disabled = False
+    if visibility_key not in st.session_state:
+        st.session_state[visibility_key] = "visible"
+        st.session_state[disabled_key] = False
 
-    # *** Dataframe Setting *** #
-
-    with st.form("my_form"):
-
+    with st.form("my_form", clear_on_submit=False):
         col1row1, col2row1, col3row1 = st.columns(3)
         with col1row1:
-            # ****** Tasks SelectBox
-            tasks = st.selectbox(
-                "Task:",
-                (cons.task_name.values()),
-            )
+            tasks = st.selectbox("Task:", (cons.task_name.values()))
             selected_index_of_tasks = list(cons.task_name.values()).index(tasks)
 
-
         with col2row1:
-            # ****** Project Code
-            pcode = st.text_input(
-                "Code:",
-                max_chars=9,
-                key=0,
-                label_visibility=st.session_state.visibility,
-                disabled=st.session_state.disabled,
-            )
+            pcode = st.text_input("Code:", max_chars=9, key=0,
+                                  label_visibility=st.session_state[visibility_key],
+                                  disabled=st.session_state[disabled_key])
             pcode = pcode.upper()
-            # Display an error message if the input is invalid
             if pcode and not validate_code(pcode):
-                st.error("Invalid code format. Please ensure the code follows this format:\n"
-                         "- First character: D, C, F, G, M, T, V, Q, R\n"
-                         "- Characters 2-5: Four digits\n"
-                         "- Character 6: N or X\n"
-                         "- Character 7: P, S, or R\n"
-                         "- Characters 8-9: 01-99")
+                st.error("Invalid code format. Please ensure the code follows the correct format.")
+
         with col3row1:
+            duration = st.select_slider("Duration:", options=[i * 0.5 for i in range(1, 17)])
 
-            duration = st.select_slider(
-                "Duration:",
-                options=[i * 0.5 for i in range(1, 17)]
-            )
-
-        # Date Container ********************************
         with st.container(border=True):
             col1row0, col2row0, col3row0 = st.columns(3)
             with col1row0:
@@ -107,33 +107,41 @@ if authentication_status:
             with col3row0:
                 day = st.number_input('Day', min_value=1, max_value=31, value=today_shamsi.day)
         task_date = datetime.date(year, month, day)
-        # Date Container ********************************
-
 
         project_description = st.text_area('Enter Project Description', height=100)
-
 
         submitted = st.form_submit_button("Submit")
         if submitted:
             if len(pcode) < 9:
                 st.error("Project Code must be exactly 9 characters long.")
+            elif not validate_code(pcode):
+                st.error("Please check the errors first!")
+            elif len(project_description) == 0:
+                st.error("Please enter a project description.")
+
             else:
                 new_row = {
-                    'start_date': task_date,
+                    'date': task_date,
                     'person_name': staff,
                     'project_code': pcode,
+                    'project_name': decode_code(pcode),
                     'duration': duration,
                     'task_name': tasks,
                     'project_description': project_description,
 
                 }
-                st.session_state.df = pd.concat([st.session_state.df, pd.DataFrame([new_row])], ignore_index=True)
-                st.write("Submitted!")
+                st.session_state[df_key] = pd.concat([st.session_state[df_key], pd.DataFrame([new_row])],
+                                                     ignore_index=True)
+                st.toast("Submitted!")
 
-    edited_df = st.data_editor(st.session_state.df,
+    edited_df = st.data_editor(st.session_state[df_key],
                                use_container_width=True,
                                num_rows="dynamic",
                                hide_index=True,
-                               disabled=["person_name", "project_code"])
+                               disabled=["task_name", "project_code", "start_date", "person_name", "duration",
+                                         "project_description"])
 
-    edited_df.to_csv("test.csv", index=False)
+    # Save the updated DataFrame back to the session state and CSV file
+    st.session_state[df_key] = edited_df
+    filename = f"data/{username}.csv"
+    edited_df.to_csv(filename, index=False)  # [st.session_state[df_key] = edited_df]
