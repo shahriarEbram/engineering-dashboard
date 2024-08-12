@@ -1,7 +1,7 @@
 import code_validator
+from code_validator import validate_code, decode_code
 from generate_keys import staff_names, usernames
 import streamlit_authenticator as stauth
-from code_validator import validate_code, decode_code
 from pathlib import Path
 import streamlit as st
 import pandas as pd
@@ -88,12 +88,16 @@ if authentication_status:
             selected_index_of_tasks = list(cons.task_name.values()).index(tasks)
 
         with col2row1:
+            disable_pcode = 25 <= selected_index_of_tasks <= 31
             pcode = st.text_input("Code:", max_chars=9, key=0,
                                   label_visibility=st.session_state[visibility_key],
                                   disabled=st.session_state[disabled_key])
             pcode = pcode.upper()
             if pcode and not validate_code(pcode):
                 st.error("Invalid code format. Please ensure the code follows the correct format.")
+
+        if disable_pcode:
+            pcode = "000000000"
 
         with col3row1:
             duration = st.select_slider("Duration:", options=[i * 0.5 for i in range(1, 17)])
@@ -132,6 +136,7 @@ if authentication_status:
                 }
                 st.session_state[df_key] = pd.concat([st.session_state[df_key], pd.DataFrame([new_row])],
                                                      ignore_index=True)
+
                 st.toast("Submitted!")
 
     edited_df = st.data_editor(st.session_state[df_key],

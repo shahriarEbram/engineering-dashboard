@@ -223,10 +223,6 @@ def decode_code(code):
     code = code.upper()
     if code == "000000000":
         return "متفرقه"
-    elif code == "111111111":
-        return "پیگیری کارهای جاری"
-    elif code == "":
-        return ""
     else:
         equipment, subset, product, map_src, map_tp, number = code[:1], code[1:3], code[3:5], code[5], code[6], code[7:]
         return (equipment_name.get(equipment) + " " +
