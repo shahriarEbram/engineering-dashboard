@@ -46,8 +46,6 @@ if authentication_status:
         st.write(f"Welcome, {username}")
         authenticator.logout("Logout", "sidebar")
 
-
-
     # Continue with the rest of your application logic
     staff = cons.engineers_names.get(username)
 
@@ -77,73 +75,81 @@ if authentication_status:
         df['task_name'] = df['task_name'].astype(pd.CategoricalDtype(cons.task_name.values()))
         st.session_state[df_key] = df
 
-    if visibility_key not in st.session_state:
-        st.session_state[visibility_key] = "visible"
-        st.session_state[disabled_key] = False
-
-    with st.form("my_form", clear_on_submit=False):
+    # if visibility_key not in st.session_state:
+    #     st.session_state[visibility_key] = "visible"
+    #     st.session_state[disabled_key] = False
+    with st.container(border=True):
         col1row1, col2row1, col3row1 = st.columns(3)
-        with col1row1:
-            tasks = st.selectbox("Task:", (cons.task_name.values()))
-            selected_index_of_tasks = list(cons.task_name.values()).index(tasks)
+        with st.form("my_form", clear_on_submit=False,border=False):
+            with col1row1:
+                tasks = st.selectbox("Task:", (cons.task_name.values()))
+                selected_index_of_tasks = list(cons.task_name.values()).index(tasks)
 
-        with col2row1:
-            disable_pcode = 25 <= selected_index_of_tasks <= 31
-            pcode = st.text_input("Code:", max_chars=9, key=0,
-                                  label_visibility=st.session_state[visibility_key],
-                                  disabled=st.session_state[disabled_key])
-            pcode = pcode.upper()
-            if pcode and not validate_code(pcode):
-                st.error("Invalid code format. Please ensure the code follows the correct format.")
+            with col2row1:
+                disable_pcode = 25 <= selected_index_of_tasks <= 31
+                if not disable_pcode:
+                    pcode = st.text_input("Code:",
+                                          max_chars=9,
+                                          key=0,
+                                          disabled=False
+                                          )
+                    pcode = pcode.upper()
+                    if pcode and len(pcode) == 0 and not validate_code(pcode):
+                        st.error("Invalid code format. Please ensure the code follows the correct format.")
+                else:
+                    pcode = st.text_input("Code:",
+                                          max_chars=9,
+                                          key=0,
+                                          disabled=True,
+                                          value="000000000"
+                                          )
 
-        if disable_pcode:
-            pcode = "000000000"
+            with col3row1:
+                duration = st.select_slider("Duration:", options=[i * 0.5 for i in range(1, 17)])
 
-        with col3row1:
-            duration = st.select_slider("Duration:", options=[i * 0.5 for i in range(1, 17)])
+            with st.container(border=True):
+                col1row0, col2row0, col3row0 = st.columns(3)
+                with col1row0:
+                    year = st.number_input('Year', min_value=1300, max_value=1500, value=today_shamsi.year, disabled=True)
+                with col2row0:
+                    month = st.number_input('Month', min_value=1, max_value=12, value=today_shamsi.month)
+                with col3row0:
+                    day = st.number_input('Day', min_value=1, max_value=31, value=today_shamsi.day)
+            task_date = datetime.date(year, month, day)
 
-        with st.container(border=True):
-            col1row0, col2row0, col3row0 = st.columns(3)
-            with col1row0:
-                year = st.number_input('Year', min_value=1300, max_value=1500, value=today_shamsi.year, disabled=True)
-            with col2row0:
-                month = st.number_input('Month', min_value=1, max_value=12, value=today_shamsi.month)
-            with col3row0:
-                day = st.number_input('Day', min_value=1, max_value=31, value=today_shamsi.day)
-        task_date = datetime.date(year, month, day)
+            project_description = st.text_area('Enter Project Description', height=100)
 
-        project_description = st.text_area('Enter Project Description', height=100)
+            submitted = st.form_submit_button("Submit")
+            if submitted:
+                if len(pcode) < 9:
+                    st.error("Project Code must be exactly 9 characters long.")
+                elif not validate_code(pcode) and not disable_pcode:
+                    st.error("Please check the errors first!")
+                elif len(project_description) == 0:
+                    st.error("Please enter a project description.")
 
-        submitted = st.form_submit_button("Submit")
-        if submitted:
-            if len(pcode) < 9:
-                st.error("Project Code must be exactly 9 characters long.")
-            elif not validate_code(pcode):
-                st.error("Please check the errors first!")
-            elif len(project_description) == 0:
-                st.error("Please enter a project description.")
+                else:
+                    new_row = {
+                        'date': task_date,
+                        'person_name': staff,
+                        'project_code': pcode,
+                        'project_name': decode_code(pcode),
+                        'duration': duration,
+                        'task_name': tasks,
+                        'project_description': project_description,
 
-            else:
-                new_row = {
-                    'date': task_date,
-                    'person_name': staff,
-                    'project_code': pcode,
-                    'project_name': decode_code(pcode),
-                    'duration': duration,
-                    'task_name': tasks,
-                    'project_description': project_description,
+                    }
+                    st.session_state[df_key] = pd.concat([pd.DataFrame([new_row]), st.session_state[df_key]],
+                                                         ignore_index=True)
 
-                }
-                st.session_state[df_key] = pd.concat([st.session_state[df_key], pd.DataFrame([new_row])],
-                                                     ignore_index=True)
-
-                st.toast("Submitted!")
+                    st.toast("Submitted!")
 
     edited_df = st.data_editor(st.session_state[df_key],
                                use_container_width=True,
                                num_rows="dynamic",
                                hide_index=True,
-                               disabled=["task_name", "project_code", "start_date", "person_name", "duration",
+                               disabled=["task_name", "project_code", "start_date", "person_name",
+                                         "duration",
                                          "project_description"])
 
     # Save the updated DataFrame back to the session state and CSV file

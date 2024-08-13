@@ -195,25 +195,23 @@ map_type = {
 
 
 def validate_code(code):
-    if len(code) != 9:
-        return False
-    if code == "000000000":
-        return True
     # Extract components from the code
     equipment, subset, product, map_src, map_tp, number = code[:1], code[1:3], code[3:5], code[5], code[6], code[7:]
 
+    if len(code) != 9:
+        return False
     # Check if each component is valid
-    if equipment not in equipment_name:
+    elif equipment not in equipment_name:
         return False
-    if subset not in equipment_name_subset.get(equipment, {}):
+    elif subset not in equipment_name_subset.get(equipment, {}):
         return False
-    if product not in product_name:
+    elif product not in product_name:
         return False
-    if map_src not in map_source:
+    elif map_src not in map_source:
         return False
-    if map_tp not in map_type:
+    elif map_tp not in map_type:
         return False
-    if not number.isdigit() or not 1 <= int(number) <= 99:
+    elif not number.isdigit() or not 1 <= int(number) <= 99:
         return False
 
     return True
@@ -221,15 +219,16 @@ def validate_code(code):
 
 def decode_code(code):
     code = code.upper()
+    equipment, subset, product, map_src, map_tp, number = code[:1], code[1:3], code[3:5], code[5], code[6], code[7:]
+    # Provide a default message if the key is not found
+    equipment_name_str = equipment_name.get(equipment)
+    equipment_subset_str = equipment_name_subset.get(equipment, {}).get(subset)
+    product_name_str = product_name.get(product)
     if code == "000000000":
         return "متفرقه"
     else:
-        equipment, subset, product, map_src, map_tp, number = code[:1], code[1:3], code[3:5], code[5], code[6], code[7:]
-        return (equipment_name.get(equipment) + " " +
-                equipment_name_subset.get(equipment)[subset] + " " +
-                product_name.get(product) + " " +
-                #map_source.get(map_src) + " " +
-                #map_type.get(map_tp) + " " +
+        return (equipment_name_str + " " +
+                equipment_subset_str + " " +
+                product_name_str + " " +
                 "دست " + number
                 )
-
