@@ -225,10 +225,34 @@ def decode_code(code):
     equipment_subset_str = equipment_name_subset.get(equipment, {}).get(subset)
     product_name_str = product_name.get(product)
     if code == "000000000":
-        return "متفرقه"
+        return "امور جاری"
     else:
         return (equipment_name_str + " " +
                 equipment_subset_str + " " +
                 product_name_str + " " +
                 "دست " + number
                 )
+
+
+def decode_code2(code):
+    code = code.upper()
+    equipment, subset, product, map_src, map_tp, number = code[:1], code[1:3], code[3:5], code[5], code[6], code[7:]
+
+    # Provide a default message if the key is not found
+    equipment_name_str = equipment_name.get(equipment, "Unknown Equipment")
+    equipment_subset_str = equipment_name_subset.get(equipment, {}).get(subset, "Unknown Subset")
+    product_name_str = product_name.get(product, "Unknown Product")
+    map_source_str = map_source.get(map_src, "Unknown Source")
+    map_tp_str = map_type.get(map_tp, "Unknown Type")
+
+    if code == "000000000":
+        return "امور جاری", "امور جاری", "امور جاری"
+    else:
+        decoded_string = (equipment_name_str + " " +
+                          equipment_subset_str + " " +
+                          product_name_str + " " +
+                          map_source_str + " " +
+                          map_tp_str + " " +
+                          "دست " + number
+                          )
+        return decoded_string, map_source_str, map_tp_str
