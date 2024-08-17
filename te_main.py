@@ -12,7 +12,7 @@ import os
 from pathlib import Path
 from database import fetch_tasks, insert_task, update_tasks  # Import functions from database.py
 
-st.set_page_config(layout="wide")
+st.set_page_config(layout="wide",page_title="Engineering-Dashboard")
 
 # Load hashed passwords
 file_path = Path(__file__).parent / "data/hashed_pw.pkl"
@@ -151,11 +151,13 @@ if authentication_status:
                                use_container_width=True,
                                num_rows="dynamic",
                                hide_index=True,
-                               disabled=True)
+                               disabled=["task_name", "project_name",
+                                         "project_code", "date",
+                                         "person_name", "duration",
+                                         "project_description"])
 
-    # Update database with edited dataframe
-    if not edited_df.empty:
-        # Update tasks in the database
-        update_tasks(edited_df, staff)
+    # فیلتر کردن سطرهای خالی اضافه شده
+    filtered_df = edited_df.dropna(how='all')
 
-    st.session_state[df_key] = edited_df
+    update_tasks(filtered_df, staff)
+    st.session_state[df_key] = filtered_df
