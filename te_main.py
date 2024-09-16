@@ -81,7 +81,7 @@ if authentication_status:
                 selected_index_of_tasks = list(cons.task_name.values()).index(tasks)
 
             with col2row1:
-                disable_pcode = 22 <= selected_index_of_tasks <= 30
+                disable_pcode = 23 <= selected_index_of_tasks <= 31
                 if not disable_pcode:
                     pcode = st.text_input("Code:",
                                           max_chars=9,
