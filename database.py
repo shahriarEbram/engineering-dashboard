@@ -20,7 +20,7 @@ engineering_table = Table(
     Column('task_name', String),
     Column('project_code', String),
     Column('project_name', String),
-    Column('date', Date),
+    Column('date', String),
     Column('duration', Float),
     Column('project_description', String)
 )

@@ -12,7 +12,7 @@ import os
 from pathlib import Path
 from database import fetch_tasks, insert_task, update_tasks  # Import functions from database.py
 
-st.set_page_config(layout="wide",page_title="Engineering-Dashboard")
+st.set_page_config(layout="wide", page_title="Engineering-Dashboard")
 
 # Load hashed passwords
 file_path = Path(__file__).parent / "data/hashed_pw.pkl"
@@ -111,7 +111,8 @@ if authentication_status:
                     month = st.number_input('Month', min_value=1, max_value=12, value=today_shamsi.month)
                 with col3row0:
                     day = st.number_input('Day', min_value=1, max_value=31, value=today_shamsi.day)
-            task_date = datetime.date(year, month, day)
+            task_date = jdatetime.date(year, month, day)
+            task_date = f"{year}-{month}-{day}"
 
             project_description = st.text_area('Enter Project Description', height=100)
 
