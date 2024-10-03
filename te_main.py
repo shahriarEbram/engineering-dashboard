@@ -77,8 +77,14 @@ if authentication_status:
         col1row1, col2row1, col3row1 = st.columns(3)
         with st.form("my_form", clear_on_submit=False):
             with col1row1:
-                tasks = st.selectbox("Task:", (cons.task_name.values()))
-                selected_index_of_tasks = list(cons.task_name.values()).index(tasks)
+                tasks = st.selectbox("Task:",
+                                     options=(cons.task_name.values()),
+                                     index=None,
+                                     placeholder="نوع کار را انتخاب کنید",
+                                     )
+                selected_index_of_tasks = -1
+                if tasks is not None:
+                    selected_index_of_tasks = list(cons.task_name.values()).index(tasks)
 
             with col2row1:
                 disable_pcode = 23 <= selected_index_of_tasks <= 31
@@ -120,8 +126,10 @@ if authentication_status:
             if submitted:
                 if len(pcode) < 9:
                     st.error("Project Code must be exactly 9 characters long.")
+                elif selected_index_of_tasks is None or selected_index_of_tasks == -1:
+                    st.error("Task must be selected.")
                 elif not validate_code(pcode) and not disable_pcode:
-                    st.error("Please check the errors first!")
+                    st.error("Please check Project Code!")
                 elif len(project_description) == 0:
                     st.error("Please enter a project description.")
 
