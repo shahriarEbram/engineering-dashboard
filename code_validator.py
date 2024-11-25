@@ -111,7 +111,13 @@ equipment_name_subset = {
         '50': 'گونیا',
         '51': 'قلاویز',
         '52': 'ماشین آسیاب',
-        '53': 'تراش QC'
+        '53': 'تراش QC',
+        '54': 'سوراخ کاری',
+        '55': 'قلاویزکاری',
+        '56': 'سوراخ کاری و قلاویزکاری',
+        '57': 'اسپات',
+        '58': 'ماشین شمع',
+
     },
     'T': {
         '10': 'هلدر',
@@ -181,7 +187,11 @@ product_name = {
     '44': 'E4',
     '55': 'کپه یاتاقان 5و5',
     '57': 'TU3',
-    '90': 'ظ',
+    '86': 'اقلام انبار (WH)',
+    '87': 'OHVG',
+    '88': 'X100',
+    '89': 'XU8',
+    '90': 'عمومی',
     '91': 'ربات',
     '92': 'قطعه گیر',
     '98': 'کوره',
@@ -189,76 +199,116 @@ product_name = {
 }
 
 map_source = {
-    'N': 'داخلی',
-    'X': 'خارجی',
+    '01': 'BT1',
+    '02': 'BT2',
+    '03': 'BT3',
+    '04': 'BT4',
+    '05': 'BT5',
+    '06': 'BT6',
+    '07': 'BT7',
+    '08': 'BT8',
 }
 
 map_type = {
     'P': 'پروژه',
     'S': 'یدکی اصلاحی',
     'R': 'تحقیقاتی',
+    'X': 'خرید خارجی'
+}
+
+cylinder_head_area = {
+    '01': 'سمت درپوش',
+    '02': 'سمت محفظه',
+    '03': 'منیفولد هوا',
+    '04': 'منیفولد دود',
+    '05': 'سمت ترموستات',
+    '06': 'سمت پولکی',
 }
 
 
 def validate_code(code):
-    # Extract components from the code
-    equipment, subset, product, map_src, map_tp, number = code[:1], code[1:3], code[3:5], code[5], code[6], code[7:]
+    if code != "000000000":
+        # If BT2:
+        if len(code) == 10:
+            equipment, subset, product, map_src, map_tp, number = \
+                code[:1], code[1:3], code[3:5], code[5:7], code[7], code[8:10]
+            if equipment not in equipment_name:
+                return False
+            elif subset not in equipment_name_subset.get(equipment, {}):
+                return False
+            elif product not in product_name:
+                return False
+            elif map_src not in map_source:
+                return False
+            elif map_tp not in map_type:
+                return False
+            elif not number.isdigit() or not 1 <= int(number) <= 99:
+                return False
 
-    if len(code) != 9:
-        return False
-    # Check if each component is valid
-    elif equipment not in equipment_name:
-        return False
-    elif subset not in equipment_name_subset.get(equipment, {}):
-        return False
-    elif product not in product_name:
-        return False
-    elif map_src not in map_source:
-        return False
-    elif map_tp not in map_type:
-        return False
-    elif not number.isdigit() or not 1 <= int(number) <= 99:
-        return False
+        elif len(code) == 13:
+            equipment, subset, product, map_src, map_tp, number, cy_ar =\
+                (code[:1], code[1:3], code[3:5], code[5:7], code[7], code[8:10], code[11:])
+            if equipment not in equipment_name:
+                return False
+            elif subset not in equipment_name_subset.get(equipment, {}):
+                return False
+            elif product not in product_name:
+                return False
+            elif map_src not in map_source:
+                return False
+            elif map_tp not in map_type:
+                return False
+            elif cy_ar not in cylinder_head_area:
+                return False
+            elif not number.isdigit() or not 1 <= int(number) <= 99:
+                return False
 
-    return True
+
+        return True
 
 
 def decode_code(code):
     code = code.upper()
-    equipment, subset, product, map_src, map_tp, number = code[:1], code[1:3], code[3:5], code[5], code[6], code[7:]
-    # Provide a default message if the key is not found
-    equipment_name_str = equipment_name.get(equipment)
-    equipment_subset_str = equipment_name_subset.get(equipment, {}).get(subset)
-    product_name_str = product_name.get(product)
+
+    decoded_string = ""
     if code == "000000000":
         return "امور جاری"
-    else:
-        return (equipment_name_str + " " +
-                equipment_subset_str + " " +
-                product_name_str + " " +
-                "دست " + number
-                )
-
-
-def decode_code2(code):
-    code = code.upper()
-    equipment, subset, product, map_src, map_tp, number = code[:1], code[1:3], code[3:5], code[5], code[6], code[7:]
-
-    # Provide a default message if the key is not found
-    equipment_name_str = equipment_name.get(equipment, "Unknown Equipment")
-    equipment_subset_str = equipment_name_subset.get(equipment, {}).get(subset, "Unknown Subset")
-    product_name_str = product_name.get(product, "Unknown Product")
-    map_source_str = map_source.get(map_src, "Unknown Source")
-    map_tp_str = map_type.get(map_tp, "Unknown Type")
-
-    if code == "000000000":
-        return "امور جاری", "امور جاری", "امور جاری"
-    else:
+    # If BT2:
+    if len(code) == 10:
+        equipment, subset, product, map_src, map_tp, number = \
+            code[:1], code[1:3], code[3:5], code[5:7], code[7], code[8:10]
+        # Provide a default message if the key is not found
+        equipment_name_str = equipment_name.get(equipment, "Unknown Equipment")
+        equipment_subset_str = equipment_name_subset.get(equipment, {}).get(subset, "Unknown Subset")
+        product_name_str = product_name.get(product, "Unknown Product")
+        map_source_str = map_source.get(map_src, "Unknown Source")
+        map_tp_str = map_type.get(map_tp, "Unknown Type")
         decoded_string = (equipment_name_str + " " +
                           equipment_subset_str + " " +
                           product_name_str + " " +
-                          map_source_str + " " +
+                          " مربوط به واحد " + map_source_str + " " +
                           map_tp_str + " " +
                           "دست " + number
                           )
-        return decoded_string, map_source_str, map_tp_str
+    elif len(code) == 13:
+        equipment, subset, product, map_src, map_tp, number, cy_ar = \
+            (code[:1], code[1:3], code[3:5], code[5:7], code[7], code[8:10], code[-2:])
+
+        # Provide a default message if the key is not found
+        equipment_name_str = equipment_name.get(equipment, "Unknown Equipment")
+        equipment_subset_str = equipment_name_subset.get(equipment, {}).get(subset, "Unknown Subset")
+        product_name_str = product_name.get(product, "Unknown Product")
+        map_source_str = map_source.get(map_src, "Unknown Source")
+        map_tp_str = map_type.get(map_tp, "Unknown Type")
+        cy_ar_str = cylinder_head_area.get(cy_ar, "Unknown Type")
+        decoded_string = (equipment_name_str + " " +
+                          equipment_subset_str + " " +
+                          product_name_str + " " +
+                          "مربوط به واحد " + map_source_str + " " +
+                          map_tp_str + " " +
+                          "دست " + number +
+                          " - " + cy_ar_str
+                          )
+
+
+    return decoded_string
