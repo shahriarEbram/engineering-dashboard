@@ -10,10 +10,14 @@ equipment_name = {
     'T': 'ابزار براده برداری',
     'V': 'متفرقه',
     'Q': 'متفرقه خارج از شرکت',
-    'R': 'کارخانه آلیاژ سازی'
+    'R': 'کارخانه آلیاژ سازی',
+    'N': 'CNC',
+    'S': 'SQA',
+    'A': 'نقشه'
 }
 
 equipment_name_subset = {
+
     'D': {
         '10': 'LPDC',
         '11': 'DC (Gravity)',
@@ -154,6 +158,52 @@ equipment_name_subset = {
         '14': 'دستگاه خشک کن براده',
         '15': 'دستگاه شمش ریزی',
         '16': 'دستگاه مگنت',
+    },
+    'N': {
+        '10': 'Dah-Lih HM 500',
+        '11': 'Dah-Lih HM 1020 OLD',
+        '12': 'Dah-Lih HM 1020 NEW',
+        '13': 'Dah-Lih HM 720 OLD',
+        '14': 'Dah-Lih HM 720 NEW',
+        '15': 'EXCEL',
+        '16': 'Deckel 400',
+        '17': 'Devo Rotary 500',
+        '18': 'Mori-Seiki 63',
+        '19': 'Mori-Seiki Vertical',
+        '20': 'HENKER 400',
+        '21': 'HENKER 250',
+        '22': 'HENKER 25',
+    },
+    'S': {
+        '10': 'CP',
+        '11': 'SMEA',
+        '12': 'OPC',
+        '13': 'PROCESS',
+        '14': 'برگه ویژگی های فنی محصول',
+        '15': 'سوابق مشکلات کیفی',
+        '16': 'ماتریس محصول فرآیند',
+        '17': 'مشخصه های مهم فرآیند',
+        '18': 'مشخصه های مهم محصول',
+        '19': 'طرح کنترل اقلام ورودی'
+    },
+    'A': {
+
+            '10': 'نقشه گاید دود',
+            '11': 'نقشه گاید هوا',
+            '12': 'نقشه گاید',
+            '13': 'سیت دود',
+            '14': 'سیت هوا',
+            '15': 'پین حامل',
+            '16': 'پیچ بلند حامل',
+            '17': 'پیچ کوتاه حامل',
+            '18': 'پیچ حامل',
+            '19': 'پیچ کورکن',
+            '20': 'سوپاپ دود',
+            '21': 'سوپاپ هوا',
+            '22': 'درپوش هوا',
+            '23': 'درپوش ترموستات',
+            '24': 'میل بادامک',
+            '25': 'حامل میل اسبک'
     }
 
 }
@@ -185,7 +235,6 @@ product_name = {
     '38': 'S81',
     '42': 'کپه یاتاقان 2و4',
     '44': 'E4',
-    '55': 'کپه یاتاقان 5و5',
     '57': 'TU3',
     '86': 'اقلام انبار (WH)',
     '87': 'OHVG',
@@ -213,10 +262,12 @@ map_type = {
     'P': 'پروژه',
     'S': 'یدکی اصلاحی',
     'R': 'تحقیقاتی',
-    'X': 'خرید خارجی'
+    'X': 'خرید خارجی',
+    'E': 'مهندسی معکوس'
 }
 
 cylinder_head_area = {
+    '00': '',
     '01': 'سمت درپوش',
     '02': 'سمت محفظه',
     '03': 'منیفولد هوا',
@@ -246,7 +297,7 @@ def validate_code(code):
                 return False
 
         elif len(code) == 13:
-            equipment, subset, product, map_src, map_tp, number, cy_ar =\
+            equipment, subset, product, map_src, map_tp, number, cy_ar = \
                 (code[:1], code[1:3], code[3:5], code[5:7], code[7], code[8:10], code[11:])
             if equipment not in equipment_name:
                 return False
@@ -262,7 +313,6 @@ def validate_code(code):
                 return False
             elif not number.isdigit() or not 1 <= int(number) <= 99:
                 return False
-
 
         return True
 
@@ -301,14 +351,13 @@ def decode_code(code):
         map_source_str = map_source.get(map_src, "Unknown Source")
         map_tp_str = map_type.get(map_tp, "Unknown Type")
         cy_ar_str = cylinder_head_area.get(cy_ar, "Unknown Type")
-        decoded_string = (equipment_name_str + " " +
-                          equipment_subset_str + " " +
-                          product_name_str + " " +
-                          "مربوط به واحد " + map_source_str + " " +
-                          map_tp_str + " " +
-                          "دست " + number +
-                          " - " + cy_ar_str
-                          )
-
+        if cy_ar != '00':
+            decoded_string = (f"{equipment_name_str}\n{equipment_subset_str} \n{product_name_str} \n"
+                              f"مربوط به واحد {map_source_str} \n {map_tp_str} \n"
+                              f"دست {number}\n{cy_ar_str}")
+        else:
+            decoded_string = (f"{equipment_name_str}\n{equipment_subset_str}\n{product_name_str}\n"
+                              f"مربوط به واحد {map_source_str}\n{map_tp_str}\n"
+                              f"دست {number}")
 
     return decoded_string
